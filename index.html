@@ -1,4 +1,120 @@
 <!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meri AI Friend</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { margin: 0; background: linear-gradient(135deg, #ffd6e7, #d9e7ff); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .app { width: 95%; max-width: 500px; height: 650px; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px #0003; display: flex; flex-direction: column; }
+        header { background: #ff4f91; color: white; padding: 18px; text-align: center; }
+        header h2 { margin: 0; }
+        #chat { flex: 1; padding: 15px; overflow-y: auto; }
+        .message { padding: 11px 14px; margin: 9px 0; border-radius: 15px; max-width: 80%; line-height: 1.4; word-wrap: break-word; }
+        .ai { background: #f1f1f1; margin-right: auto; }
+        .user { background: #ff4f91; color: white; margin-left: auto; }
+        .controls { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #ddd; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 10px; font-size: 15px; }
+        button { border: none; border-radius: 10px; padding: 10px 13px; background: #ff4f91; color: white; cursor: pointer; }
+        button:hover { background: #e83276; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header>
+            <h2>Meri AI Friend</h2>
+            <small>Always here to talk</small>
+        </header>
+        <div id="chat">
+            <div class="message ai">Hii! Main tumhari AI friend hoon. Tumhara naam kya hai?</div>
+        </div>
+        <div class="controls">
+            <input id="messageInput" placeholder="Apna message likho..." />
+            <button onclick="sendMessage()">Send</button>
+            <button onclick="startVoice()">🎙️</button>
+        </div>
+    </div>
+
+    <script>
+        let userName = localStorage.getItem("userName") || "";
+
+        function addMessage(text, type) {
+            const chat = document.getElementById("chat");
+            const message = document.createElement("div");
+            message.className = "message " + type;
+            message.textContent = text;
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function getReply(message) {
+            const text = message.toLowerCase();
+            if (text.includes("mera naam")) {
+                userName = message.split("mera naam").pop().trim();
+                localStorage.setItem("userName", userName);
+                return "Nice to meet you, " + userName + "! 😊";
+            }
+            if (text.includes("hello") || text.includes("hii") || text.includes("hi")) {
+                return "Hii " + (userName || "friend") + "! Aaj ka din kaisa ja raha hai?";
+            }
+            if (text.includes("kaise ho")) {
+                return "Main bilkul theek hoon! Tum batao, tum kya kar rahe ho?";
+            }
+            if (text.includes("time")) {
+                return "Abhi time hai " + new Date().toLocaleTimeString();
+            }
+            if (text.includes("bye")) {
+                return "Bye! Apna dhyan rakhna 💕";
+            }
+            return "Main samajhne ki koshish kar rahi hoon. Thoda aur detail mein batao?";
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("messageInput");
+            const message = input.value.trim();
+            if (!message) return;
+            addMessage(message, "user");
+            input.value = "";
+            setTimeout(() => {
+                const reply = getReply(message);
+                addMessage(reply, "ai");
+                speak(reply);
+            }, 500);
+        }
+
+        function speak(text) {
+            if ("speechSynthesis" in window) {
+                const speech = new SpeechSynthesisUtterance(text);
+                speech.lang = "hi-IN";
+                window.speechSynthesis.speak(speech);
+            }
+        }
+
+        function startVoice() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Voice recognition is not supported in this browser.");
+                return;
+            }
+            const recognition = new SpeechRecognition();
+            recognition.lang = "hi-IN";
+            recognition.onresult = function(event) {
+                document.getElementById("messageInput").value = event.results[0][0].transcript;
+                sendMessage();
+            };
+            recognition.start();
+        }
+
+        document.getElementById("messageInput").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Meri AI girlFriend</title>
