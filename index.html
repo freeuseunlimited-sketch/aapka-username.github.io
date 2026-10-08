@@ -1,5 +1,104 @@
-<!DOCTYPE html>
+<!DOC><!DOCTYPE html>
 <html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Companion</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background: #0f172a; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 10px; }
+        .chat-card { width: 100%; max-width: 450px; height: 90vh; max-height: 680px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .header { background: #1e293b; padding: 16px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #8b5cf6); display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; font-size: 20px; box-shadow: 0 0 12px rgba(236, 72, 153, 0.5); }
+        .user-info h3 { color: #f8fafc; font-size: 16px; font-weight: 600; }
+        .status { color: #10b981; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .status::before { content: ""; width: 7px; height: 7px; background: #10b981; border-radius: 50%; display: inline-block; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; opacity: 0; transform: translateY(10px); animation: fadeIn 0.3s forwards; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .ai-msg { background: #334155; color: #f1f5f9; border-bottom-left-radius: 4px; align-self: flex-start; }
+        .user-msg { background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .typing { display: none; align-self: flex-start; background: #334155; color: #94a3b8; padding: 10px 16px; border-radius: 18px; font-size: 13px; font-style: italic; }
+        .input-area { padding: 15px; background: #1e293b; display: flex; gap: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 12px; padding: 12px 16px; color: white; font-size: 14px; outline: none; }
+        input:focus { border-color: #ec4899; }
+        button { background: linear-gradient(135deg, #ec4899, #8b5cf6); border: none; border-radius: 12px; padding: 12px 16px; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="chat-card">
+        <div class="header">
+            <div class="avatar">AI</div>
+            <div class="user-info">
+                <h3>Aria (AI Friend)</h3>
+                <div class="status">Online</div>
+            </div>
+        </div>
+        <div class="chat-area" id="chatArea">
+            <div class="msg ai-msg">Hii! Main Aria hoon. Batao aaj kya chal raha hai? 😊</div>
+        </div>
+        <div class="typing" id="typingIndicator">Aria typing...</div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Kuch bolo..." onkeydown="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()">Send</button>
+            <button onclick="startVoice()">🎙️</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMsg() {
+            const input = document.getElementById('userInput');
+            const chat = document.getElementById('chatArea');
+            const text = input.value.trim();
+            if(!text) return;
+
+            // Add User Message
+            const uMsg = document.createElement('div');
+            uMsg.className = 'msg user-msg';
+            uMsg.textContent = text;
+            chat.appendChild(uMsg);
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            // Show Typing Indicator
+            const typing = document.getElementById('typingIndicator');
+            typing.style.display = 'block';
+
+            // Simulate Reply
+            setTimeout(() => {
+                typing.style.display = 'none';
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'msg ai-msg';
+                aiMsg.textContent = getReply(text);
+                chat.appendChild(aiMsg);
+                chat.scrollTop = chat.scrollHeight;
+            }, 1000);
+        }
+
+        function getReply(msg) {
+            const t = msg.toLowerCase();
+            if(t.includes('kaise ho') || t.includes('kasi ho')) return "Main ekdum badiya hoon! Tum batao?";
+            if(t.includes('naam')) return "Mera naam Aria hai!";
+            if(t.includes('hello') || t.includes('hi')) return "Hii there! Kaise ho?";
+            return "Sahi baat hai! Thoda aur batao iske baare mein?";
+        }
+
+        function startVoice() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if(!SR) { alert("Speech Recognition not supported."); return; }
+            const rec = new SR();
+            rec.lang = 'hi-IN';
+            rec.onresult = (e) => {
+                document.getElementById('userInput').value = e.results[0][0].transcript;
+                sendMsg();
+            };
+            rec.start();
+        }
+    </script>
+</body>
+</html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
