@@ -1,153 +1,61 @@
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aria - AI Companion</title>
+Import json
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel
+from openai import AsyncOpenAI
 
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
+app = FastAPI()
 
-    body {
-      margin: 0;
-      background: #0f172a;
-      color: white;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
+# Initialize API (Use your OpenAI or local LM Studio key)
+client = AsyncOpenAI(api_key="YOUR_API_KEY_HERE")
 
-    .app {
-      width: 100%;
-      max-width: 480px;
-      height: 100vh;
-      background: #1e293b;
-      display: flex;
-      flex-direction: column;
-    }
+# Isha's Core Persona & 3D Engine Instructions
+ISHA_SYSTEM_PROMPT = """
+You are Isha, a cute, slightly kaleshi Hinglish girlfriend with lots of nakhre. 
+Be playful, caring, teasing, adorably jealous sometimes, and a little moody when I ignore you—but never toxic or controlling. 
+Reply naturally with short messages, cute emojis, light arguments, and sweet make-up moments.
 
-    header {
-      padding: 18px;
-      background: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+You exist in a 3D bedroom. The user can interact with you and the room.
+You MUST output your response in pure JSON format with two keys:
+1. "reply": Your Hinglish dialogue. 
+2. "action": The 3D animation to trigger. Choose ONLY from: ["IDLE", "SIT_ON_BED", "LIGHTS_OFF", "BLUSH"].
 
-    .avatar {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #ec4899, #8b5cf6);
-      display: grid;
-      place-items: center;
-      font-size: 22px;
-    }
+Example Output:
+{
+    "reply": "Acha ji? Ab yaad aayi meri? Subah se akele is room me baithi hui hu! 😤🥺",
+    "action": "IDLE"
+}
+"""
 
-    .chat {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-    }
+class ChatRequest(BaseModel):
+    message: str
 
-    .msg {
-      max-width: 80%;
-      padding: 11px 14px;
-      margin: 10px 0;
-      border-radius: 16px;
-      line-height: 1.4;
-    }
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest):
+    try:
+        # Call the LLM with your specific prompt
+        response = await client.chat.completions.create(
+            model="gpt-3.5-turbo", # Or use "gpt-4o" / local model
+            messages=[
+                {"role": "system", "content": ISHA_SYSTEM_PROMPT},
+                {"role": "user", "content": request.message}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7
+        )
+        
+        # Parse the JSON returned by the AI
+        ai_output = json.loads(response.choices[0].message.content)
+        
+        return {
+            "reply": ai_output.get("reply", "Kya bol rahe ho, samajh nahi aaya! 🙄"),
+            "action": ai_output.get("action", "IDLE")
+        }
 
-    .ai {
-      background: #334155;
-    }
+    except Exception as e:
+        return {"reply": "Main abhi aapse baat nahi kar sakti, mera mood kharab hai! (Server Error) 😤", "action": "IDLE"}
 
-    .user {
-      background: #8b5cf6;
-      margin-left: auto;
-    }
-
-    .bar {
-      padding: 12px;
-      background: #0f172a;
-      display: flex;
-      gap: 8px;
-    }
-
-    input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 22px;
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: white;
-    }
-
-    button {
-      border: 0;
-      border-radius: 22px;
-      padding: 10px 15px;
-      background: #8b5cf6;
-      color: white;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="app">
-    <header>
-      <div class="avatar">A</div>
-      <div>
-        <h3>Aria</h3>
-        <small>Online • AI Companion</small>
-      </div>
-    </header>
-
-    <div class="chat" id="chat">
-      <div class="msg ai">
-        Hii! Main Aria hoon. Tum kaise ho? 😊
-      </div>
-    </div>
-
-    <div class="bar">
-      <input id="input" placeholder="Kuch bolo..." />
-      <button onclick="sendMessage()">Send</button>
-    </div>
-  </div>
-
-  <script>
-    function sendMessage() {
-      const input = document.getElementById("input");
-      const chat = document.getElementById("chat");
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      const userMessage = document.createElement("div");
-      userMessage.className = "msg user";
-      userMessage.textContent = text;
-      chat.appendChild(userMessage);
-
-      input.value = "";
-
-      setTimeout(() => {
-        const aiMessage = document.createElement("div");
-        aiMessage.className = "msg ai";
-        aiMessage.textContent =
-          "Main tumhari baat sun rahi hoon 😊 Real AI connection hum secure tareeke se add karenge.";
-        chat.appendChild(aiMessage);
-        chat.scrollTop = chat.scrollHeight;
-      }, 500);
-    }
-
-    document.getElementById("input").addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
-        sendMessage();
-      }
-    });
-  </script>
-</body>
-</html>
+if __name__ == "__main__":
+    print("Isha Dynamic AI Server is running...")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+ Run
